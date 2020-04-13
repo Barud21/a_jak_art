@@ -1,23 +1,42 @@
-import datetime
 from functools import wraps
 
-def add_date(format):
-    def inner(to_be_decorated):
-        @wraps(to_be_decorated)
-        def wrapper(*args, **kwargs):
-            val = to_be_decorated(*args, **kwargs)
-            val['date'] = datetime.datetime.now().strftime(format)
-            return val
+def is_correct(*args):
+    def inner(f):
+        @wraps(f)
+        def wrapper():
+            dictionary = f()
+            if all(arg in dictionary for arg in args):
+                return dictionary
+            else:
+                return None
         return wrapper
     return inner
 
-@add_date('%B %Y')
-def get_data(a):
-    return {1: a, 'name': 'Jan'}
+@is_correct('first_name', 'last_name')
+def get_data():
+    return {
+        'first_name': 'Jan',
+        'last_name': 'Kowalski',
+        'email': 'jan@kowalski.com'
+    }
 
 
-assert get_data(2) == {
-    1: 2, 'name': 'Jan', 'date': 'April 2020'
+@is_correct('first_name', 'last_name', 'email')
+def get_other_data():
+    return {
+        'first_name': 'Jan',
+        'email': 'jan@kowalski.com'
+    }
+
+
+assert get_data() == {
+    'first_name': 'Jan',
+    'last_name': 'Kowalski',
+    'email': 'jan@kowalski.com'
 }
 
-print(get_data(2))
+
+assert get_other_data() is None
+
+print(get_other_data())
+print(get_data())
